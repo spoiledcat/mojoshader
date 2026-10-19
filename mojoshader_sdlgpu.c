@@ -37,6 +37,7 @@ typedef struct SDL_ShaderCross_SPIRV_Info
 } SDL_ShaderCross_SPIRV_Info;
 
 typedef struct SDL_ShaderCross_GraphicsShaderMetadata SDL_ShaderCross_GraphicsShaderMetadata;
+typedef struct SDL_ShaderCross_GraphicsShaderResourceInfo SDL_ShaderCross_GraphicsShaderResourceInfo;
 #endif
 
 typedef SDL_GPUShaderFormat (SDLCALL *PFN_SDL_ShaderCross_GetSPIRVShaderFormats)(void);
@@ -51,6 +52,13 @@ typedef SDL_GPUShader *(SDLCALL *PFN_SDL_ShaderCross_CompileGraphicsShaderFromSP
     SDL_PropertiesID props);
 
 static SDL_SharedObject *SDL_shadercross_lib = NULL;
+
+#ifndef USE_SDL3_SHADERCROSS_LOCAL
+static PFN_SDL_ShaderCross_GetSPIRVShaderFormats SDL_ShaderCross_GetSPIRVShaderFormats = NULL;
+static PFN_SDL_ShaderCross_ReflectGraphicsSPIRV SDL_ShaderCross_ReflectGraphicsSPIRV = NULL;
+static PFN_SDL_ShaderCross_CompileGraphicsShaderFromSPIRV SDL_ShaderCross_CompileGraphicsShaderFromSPIRV = NULL;
+#endif
+
 static PFN_SDL_ShaderCross_GetSPIRVShaderFormats SDL_ShaderCross_GetSPIRVShaderFormatsFn = NULL;
 static PFN_SDL_ShaderCross_ReflectGraphicsSPIRV SDL_ShaderCross_ReflectGraphicsSPIRVFn = NULL;
 static PFN_SDL_ShaderCross_CompileGraphicsShaderFromSPIRV SDL_ShaderCross_CompileGraphicsShaderFromSPIRVFn = NULL;
@@ -295,7 +303,7 @@ static uint8_t update_uniform_buffer(
 unsigned int MOJOSHADER_sdlGetShaderFormats(void)
 {
     int ret = shader_format;
-    auto get = SDL_ShaderCross_GetSPIRVShaderFormats != NULL ? SDL_ShaderCross_GetSPIRVShaderFormats : SDL_ShaderCross_GetSPIRVShaderFormatsFn != NULL ? SDL_ShaderCross_GetSPIRVShaderFormatsFn : NULL;
+    PFN_SDL_ShaderCross_GetSPIRVShaderFormats get = SDL_ShaderCross_GetSPIRVShaderFormats != NULL ? SDL_ShaderCross_GetSPIRVShaderFormats : SDL_ShaderCross_GetSPIRVShaderFormatsFn != NULL ? SDL_ShaderCross_GetSPIRVShaderFormatsFn : NULL;
     if (get != NULL)
         ret |= get();
     else
@@ -304,7 +312,7 @@ unsigned int MOJOSHADER_sdlGetShaderFormats(void)
         SDL_shadercross_lib = SDL_LoadObject(SDL_SHADERCROSS_LIB_NAME);
         if (SDL_shadercross_lib != NULL)
         {
-            auto func = (PFN_SDL_ShaderCross_GetSPIRVShaderFormats) SDL_LoadFunction(
+            PFN_SDL_ShaderCross_GetSPIRVShaderFormats func = (PFN_SDL_ShaderCross_GetSPIRVShaderFormats) SDL_LoadFunction(
                 SDL_shadercross_lib,
                 "SDL_ShaderCross_GetSPIRVShaderFormats"
             );
@@ -527,8 +535,8 @@ static MOJOSHADER_sdlProgram *compile_program(
         } // if
     } // else if
 
-    auto compile = SDL_ShaderCross_CompileGraphicsShaderFromSPIRV != NULL ? SDL_ShaderCross_CompileGraphicsShaderFromSPIRV : SDL_ShaderCross_CompileGraphicsShaderFromSPIRVFn != NULL ? SDL_ShaderCross_CompileGraphicsShaderFromSPIRVFn : NULL;
-    auto reflect = SDL_ShaderCross_ReflectGraphicsSPIRV != NULL ? SDL_ShaderCross_ReflectGraphicsSPIRV : SDL_ShaderCross_ReflectGraphicsSPIRVFn != NULL ? SDL_ShaderCross_ReflectGraphicsSPIRVFn : NULL;
+    PFN_SDL_ShaderCross_CompileGraphicsShaderFromSPIRV compile = SDL_ShaderCross_CompileGraphicsShaderFromSPIRV != NULL ? SDL_ShaderCross_CompileGraphicsShaderFromSPIRV : SDL_ShaderCross_CompileGraphicsShaderFromSPIRVFn != NULL ? SDL_ShaderCross_CompileGraphicsShaderFromSPIRVFn : NULL;
+    PFN_SDL_ShaderCross_ReflectGraphicsSPIRV reflect = SDL_ShaderCross_ReflectGraphicsSPIRV != NULL ? SDL_ShaderCross_ReflectGraphicsSPIRV : SDL_ShaderCross_ReflectGraphicsSPIRVFn != NULL ? SDL_ShaderCross_ReflectGraphicsSPIRVFn : NULL;
 
     if (compile != NULL)
     {
